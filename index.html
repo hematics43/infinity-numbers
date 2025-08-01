@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Infinity Tap Final</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #111;
+      color: #00ffcc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 90px;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .counter {
+      font-size: clamp(2rem, 8vw, 6rem);
+      text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc;
+      max-width: 90%;
+      text-align: center;
+      word-break: break-word;
+      transition: transform 0.2s ease;
+    }
+    .word {
+      font-size: 1.2rem;
+      font-weight: bold;
+      animation: colorCycle 4s linear infinite;
+      margin: 5px 20px;
+      text-align: center;
+      line-height: 1.4;
+    }
+    @keyframes colorCycle {
+      0% { color: #ff4d4d; }
+      25% { color: #ffc107; }
+      50% { color: #4caf50; }
+      75% { color: #2196f3; }
+      100% { color: #e91e63; }
+    }
+    .tap-area {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+    .buttons, .bottom-buttons {
+      position: fixed;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      z-index: 2;
+    }
+    .buttons { top: 10px; padding: 0 10px; }
+    .bottom-buttons { bottom: 20px; }
+    button {
+      background: #222;
+      color: #00ffcc;
+      border: 1px solid #00ffcc;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button.active { background: #00ffcc; color: #000; }
+    button.auto-on { background-color: #00ff00; color: black; }
+    button.negative-on { background-color: #ff4d4d; color: black; }
+    button.sound-on { background-color: #2196f3; color: white; }
+  </style>
+</head>
+<body>
+
+<div class="buttons">
+  <button onclick="setMode('normal')" id="btn-normal" class="active">Normal</button>
+  <button onclick="setMode('prime')" id="btn-prime">Prime</button>
+  <button onclick="setMode('fibo')" id="btn-fibo">Fibonacci</button>
+  <button onclick="setMode('even')" id="btn-even">Even</button>
+  <button onclick="setMode('odd')" id="btn-odd">Odd</button>
+  <button onclick="toggleNegative()" id="btn-negative">➖ Negative: OFF</button>
+  <button onclick="toggleSound()" id="btn-sound">🔊 Sound: ON</button>
+</div>
+
+<div class="bottom-buttons">
+  <button onclick="resetCurrentMode()">🔁 Reset</button>
+  <button onclick="toggleAutoTap()" id="autoBtn">▶️ Auto Tap</button>
+</div>
+
+<div class="tap-area" onclick="tapOnce()" ontouchstart="tapOnce()"></div>
+<div class="counter" id="counter">0</div>
+<div class="word" id="word">Zero</div>
+
+<audio id="tapSound" src="https://www.soundjay.com/button/beep-07.mp3" preload="auto"></audio>
+
+<script>
+  let mode = 'normal';
+  let autoInterval = null;
+  let isNegative = false;
+  let soundEnabled = true;
+
+  let counters = {
+    normal: parseInt(localStorage.getItem('count_normal')) || 0,
+    prime: parseInt(localStorage.getItem('count_prime')) || 2,
+    fibo: JSON.parse(localStorage.getItem('count_fibo') || '[0,1]'),
+    even: parseInt(localStorage.getItem('count_even')) || 0,
+    odd: parseInt(localStorage.getItem('count_odd')) || 1
+  };
+
+  function toggleNegative() {
+    isNegative = !isNegative;
+    const btn = document.getElementById('btn-negative');
+    btn.textContent = isNegative ? '➖ Negative: ON' : '➖ Negative: OFF';
+    btn.classList.toggle('negative-on', isNegative);
+  }
+
+  function toggleSound() {
+    soundEnabled = !soundEnabled;
+    const btn = document.getElementById('btn-sound');
+    btn.textContent = soundEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+    btn.classList.toggle('sound-on', soundEnabled);
+  }
+
+  function setMode(newMode) {
+    mode = newMode;
+    document.querySelectorAll('.buttons button').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('btn-' + newMode).classList.add('active');
+    updateDisplay();
+  }
+
+  function resetCurrentMode() {
+    if (mode === 'normal') {
+      counters.normal = 0;
+      localStorage.setItem('count_normal', 0);
+    } else if (mode === 'prime') {
+      counters.prime = 2;
+      localStorage.setItem('count_prime', 2);
+    } else if (mode === 'fibo') {
+      counters.fibo = [0, 1];
+      localStorage.setItem('count_fibo', JSON.stringify([0, 1]));
+    } else if (mode === 'even') {
+      counters.even = 0;
+      localStorage.setItem('count_even', 0);
+    } else if (mode === 'odd') {
+      counters.odd = 1;
+      localStorage.setItem('count_odd', 1);
+    }
+    updateDisplay();
+  }
+
+  function tapOnce() {
+    if (soundEnabled) document.getElementById('tapSound').play();
+    let delta = isNegative ? -1 : 1;
+
+    if (mode === 'normal') {
+      counters.normal += delta;
+      localStorage.setItem('count_normal', counters.normal);
+    } else if (mode === 'prime') {
+      counters.prime = isNegative ? prevPrime(counters.prime - 1) : nextPrime(counters.prime + 1);
+      localStorage.setItem('count_prime', counters.prime);
+    } else if (mode === 'fibo') {
+      let [a, b] = counters.fibo;
+      counters.fibo = isNegative ? [b - a, a] : [b, a + b];
+      localStorage.setItem('count_fibo', JSON.stringify(counters.fibo));
+    } else if (mode === 'even') {
+      counters.even += 2 * delta;
+      localStorage.setItem('count_even', counters.even);
+    } else if (mode === 'odd') {
+      counters.odd += 2 * delta;
+      localStorage.setItem('count_odd', counters.odd);
+    }
+
+    updateDisplay();
+  }
+
+  function toggleAutoTap() {
+    const btn = document.getElementById("autoBtn");
+    if (autoInterval) {
+      clearInterval(autoInterval);
+      autoInterval = null;
+      btn.classList.remove("auto-on");
+      btn.textContent = "▶️ Auto Tap";
+    } else {
+      tapOnce();
+      autoInterval = setInterval(tapOnce, 500);
+      btn.classList.add("auto-on");
+      btn.textContent = "⏸️ Stop Auto";
+    }
+  }
+
+  function updateDisplay() {
+    let val =
+      mode === 'normal' ? counters.normal :
+      mode === 'prime'  ? counters.prime :
+      mode === 'fibo'   ? counters.fibo[0] :
+      mode === 'even'   ? counters.even :
+                          counters.odd;
+
+    document.getElementById('counter').textContent = val.toLocaleString('fullwide', { useGrouping: false });
+    document.getElementById('word').textContent = numberToWords(val);
+  }
+
+  function numberToWords(num) {
+    if (isNaN(num)) return "NaN";
+    let sign = num < 0 ? "Minus " : "";
+    num = Math.abs(num);
+    const a = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
+    const b = ["", "Thousand", "Million", "Billion", "Trillion"];
+    function chunk(n) {
+      const d = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
+      const t = ["Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen",
+        "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+      const tt = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+      let s = "", i = 0;
+      while (n > 0) {
+        let part = n % 1000;
+        if (part) {
+          let h = Math.floor(part / 100), rem = part % 100;
+          let str = "";
+          if (h) str += d[h] + " Hundred ";
+          if (rem >= 20) str += tt[Math.floor(rem / 10)] + " " + d[rem % 10];
+          else if (rem >= 10) str += t[rem - 10];
+          else if (rem > 0) str += d[rem];
+          s = str + (b[i] ? " " + b[i] : "") + " " + s;
+        }
+        n = Math.floor(n / 1000);
+        i++;
+      }
+      return s.trim();
+    }
+    return sign + (num === 0 ? "Zero" : chunk(num));
+  }
+
+  function nextPrime(n) {
+    while (!isPrime(n)) n++;
+    return n;
+  }
+
+  function prevPrime(n) {
+    while (n > 1 && !isPrime(n)) n--;
+    return n < 2 ? 2 : n;
+  }
+
+  function isPrime(n) {
+    if (n < 2) return false;
+    for (let i = 2; i <= Math.sqrt(n); i++) if (n % i === 0) return false;
+    return true;
+  }
+
+  updateDisplay();
+</script>
+</body>
+</html>
