@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Infinity Tap Final</title>
+  <title>Infinity Tap</title>
   <style>
     body {
       margin: 0;
@@ -13,18 +13,34 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding-top: 90px;
+      padding-top: 140px;
       height: 100vh;
       overflow: hidden;
     }
+
+    h1 {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      text-align: center;
+      padding: 10px 0;
+      margin: 0;
+      font-size: 1.7rem;
+      background: #000;
+      color: #00ffe1;
+      font-family: Arial, sans-serif; /* SIMPLER FONT */
+      z-index: 3;
+      border-bottom: 1px solid #00ffe1;
+    }
+
     .counter {
       font-size: clamp(2rem, 8vw, 6rem);
       text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc;
       max-width: 90%;
       text-align: center;
       word-break: break-word;
-      transition: transform 0.2s ease;
     }
+
     .word {
       font-size: 1.2rem;
       font-weight: bold;
@@ -33,6 +49,7 @@
       text-align: center;
       line-height: 1.4;
     }
+
     @keyframes colorCycle {
       0% { color: #ff4d4d; }
       25% { color: #ffc107; }
@@ -40,11 +57,13 @@
       75% { color: #2196f3; }
       100% { color: #e91e63; }
     }
+
     .tap-area {
       position: fixed;
       inset: 0;
       z-index: 0;
     }
+
     .buttons, .bottom-buttons {
       position: fixed;
       display: flex;
@@ -53,8 +72,10 @@
       gap: 8px;
       z-index: 2;
     }
-    .buttons { top: 10px; padding: 0 10px; }
+
+    .buttons { top: 50px; padding: 0 10px; }
     .bottom-buttons { bottom: 20px; }
+
     button {
       background: #222;
       color: #00ffcc;
@@ -65,6 +86,7 @@
       cursor: pointer;
       transition: 0.2s;
     }
+
     button.active { background: #00ffcc; color: #000; }
     button.auto-on { background-color: #00ff00; color: black; }
     button.negative-on { background-color: #ff4d4d; color: black; }
@@ -72,6 +94,8 @@
   </style>
 </head>
 <body>
+
+<h1>Infinity Tap Counter</h1>
 
 <div class="buttons">
   <button onclick="setMode('normal')" id="btn-normal" class="active">Normal</button>
@@ -130,22 +154,16 @@
   }
 
   function resetCurrentMode() {
-    if (mode === 'normal') {
-      counters.normal = 0;
-      localStorage.setItem('count_normal', 0);
-    } else if (mode === 'prime') {
-      counters.prime = 2;
-      localStorage.setItem('count_prime', 2);
-    } else if (mode === 'fibo') {
-      counters.fibo = [0, 1];
-      localStorage.setItem('count_fibo', JSON.stringify([0, 1]));
-    } else if (mode === 'even') {
-      counters.even = 0;
-      localStorage.setItem('count_even', 0);
-    } else if (mode === 'odd') {
-      counters.odd = 1;
-      localStorage.setItem('count_odd', 1);
-    }
+    if (mode === 'normal') counters.normal = 0;
+    else if (mode === 'prime') counters.prime = 2;
+    else if (mode === 'fibo') counters.fibo = [0, 1];
+    else if (mode === 'even') counters.even = 0;
+    else if (mode === 'odd') counters.odd = 1;
+    localStorage.setItem('count_normal', counters.normal);
+    localStorage.setItem('count_prime', counters.prime);
+    localStorage.setItem('count_fibo', JSON.stringify(counters.fibo));
+    localStorage.setItem('count_even', counters.even);
+    localStorage.setItem('count_odd', counters.odd);
     updateDisplay();
   }
 
@@ -205,7 +223,7 @@
     if (isNaN(num)) return "NaN";
     let sign = num < 0 ? "Minus " : "";
     num = Math.abs(num);
-    const a = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
+    const a = ["Zero","One","Two","Three","Four","Five","Six","Seven","Eight","Nine"];
     const b = ["", "Thousand", "Million", "Billion", "Trillion"];
     function chunk(n) {
       const d = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
